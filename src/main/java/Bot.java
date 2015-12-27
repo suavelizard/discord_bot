@@ -1,3 +1,7 @@
+import com.google.code.chatterbotapi.ChatterBot;
+import com.google.code.chatterbotapi.ChatterBotFactory;
+import com.google.code.chatterbotapi.ChatterBotSession;
+import com.google.code.chatterbotapi.ChatterBotType;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -14,6 +18,7 @@ import sx.blah.discord.handle.IListener;
 import sx.blah.discord.handle.impl.events.InviteReceivedEvent;
 import sx.blah.discord.handle.impl.events.MessageDeleteEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.obj.Channel;
 import sx.blah.discord.handle.obj.Invite;
 import sx.blah.discord.handle.obj.Message;
@@ -21,15 +26,15 @@ import sx.blah.discord.handle.obj.PrivateChannel;
 import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.Presences;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Zane on 12/21/2015.
@@ -39,8 +44,23 @@ public class Bot {
     public static Set<String> swear_words;
     public static Set<String> illegal_words;
     public static void main(String[] args) {
-        String swear_array[] = {"fuck","faggot","moist","asshole","nigger","cunt","cumbucket", "mens rights","triggered","fuckin","slut","panflute"};
+        // When your program starts up
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        long startTime = System.currentTimeMillis();
+        //executor.shutdown();
+        String swear_array[] = {"fuck","faggot","moist","asshole","nigger","cunt","cumbucket", "mens rights","triggered","fuckin","slut","panflute","bazinga","pant antler","pantler","goob","goober"};
         String google_swear_array[] = {"4r5e", "5h1t", "5hit", "a55", "anal", "anus", "ar5e", "arrse", "arse", "ass", "ass-fucker", "asses", "assfucker", "assfukka", "asshole", "assholes", "asswhole", "a_s_s", "b!tch", "b00bs", "b17ch", "b1tch", "ballbag", "balls", "ballsack", "bastard", "beastial", "beastiality", "bellend", "bestial", "bestiality", "bi+ch", "biatch", "bitch", "bitcher", "bitchers", "bitches", "bitchin", "bitching", "bloody", "blow job", "blowjob", "blowjobs", "boiolas", "bollock", "bollok", "boner", "boob", "boobs", "booobs", "boooobs", "booooobs", "booooooobs", "breasts", "buceta", "bugger", "bum", "bunny fucker", "butt", "butthole", "buttmuch", "buttplug", "c0ck", "c0cksucker", "carpet muncher", "cawk", "chink", "cipa", "cl1t", "clit", "clitoris", "clits", "cnut", "cock", "cock-sucker", "cockface", "cockhead", "cockmunch", "cockmuncher", "cocks", "cocksuck", "cocksucked", "cocksucker", "cocksucking", "cocksucks", "cocksuka", "cocksukka", "cok", "cokmuncher", "coksucka", "coon", "cox", "crap", "cum", "cummer", "cumming", "cums", "cumshot", "cunilingus", "cunillingus", "cunnilingus", "cunt", "cuntlick", "cuntlicker", "cuntlicking", "cunts", "cyalis", "cyberfuc", "cyberfuck", "cyberfucked", "cyberfucker", "cyberfuckers", "cyberfucking", "d1ck", "damn", "dick", "dickhead", "dildo", "dildos", "dink", "dinks", "dirsa", "dlck", "dog-fucker", "doggin", "dogging", "donkeyribber", "doosh", "duche", "dyke", "ejaculate", "ejaculated", "ejaculates", "ejaculating", "ejaculatings", "ejaculation", "ejakulate", "f u c k", "f u c k e r", "f4nny", "fag", "fagging", "faggitt", "faggot", "faggs", "fagot", "fagots", "fags", "fanny", "fannyflaps", "fannyfucker", "fanyy", "fatass", "fcuk", "fcuker", "fcuking", "feck", "fecker", "felching", "fellate", "fellatio", "fingerfuck", "fingerfucked", "fingerfucker", "fingerfuckers", "fingerfucking", "fingerfucks", "fistfuck", "fistfucked", "fistfucker", "fistfuckers", "fistfucking", "fistfuckings", "fistfucks", "flange", "fook", "fooker", "fuck", "fucka", "fucked", "fucker", "fuckers", "fuckhead", "fuckheads", "fuckin", "fucking", "fuckings", "fuckingshitmotherfucker", "fuckme", "fucks", "fuckwhit", "fuckwit", "fudge packer", "fudgepacker", "fuk", "fuker", "fukker", "fukkin", "fuks", "fukwhit", "fukwit", "fux", "fux0r", "f_u_c_k", "gangbang", "gangbanged", "gangbangs", "gaylord", "gaysex", "goatse", "God", "god-dam", "god-damned", "goddamn", "goddamned", "hardcoresex", "hell", "heshe", "hoar", "hoare", "hoer", "homo", "hore", "horniest", "horny", "hotsex", "jack-off", "jackoff", "jap", "jerk-off", "jism", "jiz", "jizm", "jizz", "kawk", "knob", "knobead", "knobed", "knobend", "knobhead", "knobjocky", "knobjokey", "kock", "kondum", "kondums", "kum", "kummer", "kumming", "kums", "kunilingus", "l3i+ch", "l3itch", "labia", "lmfao", "lust", "lusting", "m0f0", "m0fo", "m45terbate", "ma5terb8", "ma5terbate", "masochist", "master-bate", "masterb8", "masterbat*", "masterbat3", "masterbate", "masterbation", "masterbations", "masturbate", "mo-fo", "mof0", "mofo", "mothafuck", "mothafucka", "mothafuckas", "mothafuckaz", "mothafucked", "mothafucker", "mothafuckers", "mothafuckin", "mothafucking", "mothafuckings", "mothafucks", "mother fucker", "motherfuck", "motherfucked", "motherfucker", "motherfuckers", "motherfuckin", "motherfucking", "motherfuckings", "motherfuckka", "motherfucks", "muff", "mutha", "muthafecker", "muthafuckker", "muther", "mutherfucker", "n1gga", "n1gger", "nazi", "nigg3r", "nigg4h", "nigga", "niggah", "niggas", "niggaz", "nigger", "niggers", "nob", "nob jokey", "nobhead", "nobjocky", "nobjokey", "numbnuts", "nutsack", "orgasim", "orgasims", "orgasm", "orgasms", "p0rn", "pawn", "pecker", "penis", "penisfucker", "phonesex", "phuck", "phuk", "phuked", "phuking", "phukked", "phukking", "phuks", "phuq", "pigfucker", "pimpis", "piss", "pissed", "pisser", "pissers", "pisses", "pissflaps", "pissin", "pissing", "pissoff", "poop", "porn", "porno", "pornography", "pornos", "prick", "pricks", "pron", "pube", "pusse", "pussi", "pussies", "pussy", "pussys", "rectum", "retard", "rimjaw", "rimming", "s hit", "s.o.b.", "sadist", "schlong", "screwing", "scroat", "scrote", "scrotum", "semen", "sex", "sh!+", "sh!t", "sh1t", "shag", "shagger", "shaggin", "shagging", "shemale", "shi+", "shit", "shitdick", "shite", "shited", "shitey", "shitfuck", "shitfull", "shithead", "shiting", "shitings", "shits", "shitted", "shitter", "shitters", "shitting", "shittings", "shitty", "skank", "slut", "sluts", "smegma", "smut", "snatch", "son-of-a-bitch", "spac", "spunk", "s_h_i_t", "t1tt1e5", "t1tties", "teets", "teez", "testical", "testicle", "tit", "titfuck", "tits", "titt", "tittie5", "tittiefucker", "titties", "tittyfuck", "tittywank", "titwank", "tosser", "turd", "tw4t", "twat", "twathead", "twatty", "twunt", "twunter", "v14gra", "v1gra", "vagina", "viagra", "vulva", "w00se", "wang", "wank", "wanker", "wanky", "whoar", "whore", "willies", "willy", "xrated", "xxx"};
+        String[] swear_responses = {"%s watch your language infidel!",
+                "Watch your fucking language %s",
+                "You think you're cool %s, you swearing mongoloid?",
+                "I'm gonna wash your mouth out with soap %s",
+                "Swearing doesn't make you cool %s",
+                "Baby Jesus is so disappointed in you %s",
+                "Get out of mah swamp %s!",
+                "Primitive organic jibber jabber %s, don't do it again",
+                "%s you foul-mouthed jew"
+        };
+
         List list = new ArrayList(Arrays.asList(swear_array));
         list.addAll(Arrays.asList(google_swear_array));
 //        list.to
@@ -49,8 +69,11 @@ public class Bot {
         illegal_words = new HashSet(Arrays.asList(illegal_array));
 
         try {
-            DiscordClient.get().login("jackofhertz@hotmail.com" /* username */, "password1" /* password */);
+            ChatterBotFactory factory = new ChatterBotFactory();
 
+            ChatterBot bot1 = factory.create(ChatterBotType.CLEVERBOT);
+            ChatterBotSession bot1session = bot1.createSession();
+            DiscordClient.get().login("jackofhertz@hotmail.com" /* username */, "password1" /* password */);
             DiscordClient.get().getDispatcher().registerListener(new IListener<InviteReceivedEvent>() {
                 @Override public void receive(InviteReceivedEvent event) {
                     Invite invite = event.getInvite();
@@ -60,18 +83,20 @@ public class Bot {
                         invite.accept();
                         DiscordClient.get().sendMessage(String.format("Hello, #%s and the \\\"%s\\\" guild! I was invited by %s!",
                                 response.getChannelName(), response.getGuildName(), event.getMessage().getAuthor()),
-                                response.getChannelID());
+                                response.getChannelID(),false);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 
                 }
             });
+//            D;
             DiscordClient.get().getDispatcher().registerListener(new IListener<MessageReceivedEvent>() {
                 @Override public void receive(MessageReceivedEvent messageReceivedEvent) {
                     Message m = messageReceivedEvent.getMessage();
-                    if (m.getContent().startsWith(".meme")
-                            || m.getContent().startsWith(".nicememe")) {
+                    String[] message_array = m.getContent().split("\\s+");
+                    if (m.getContent().startsWith("!meme")
+                            || m.getContent().startsWith("!nicememe")) {
                         new MessageBuilder().appendContent("MEMES REQUESTED:", MessageBuilder.Styles.UNDERLINE_BOLD_ITALICS)
                                 .appendContent(" http://niceme.me/").withChannel(messageReceivedEvent.getMessage().getChannel())
                                 .build();
@@ -96,6 +121,34 @@ public class Bot {
                         } catch (ParseException | IOException e) {
                             e.printStackTrace();
                         }
+                    } else if(m.getContent().contains("!taylor")){
+                        String reply = "What did you just say to me you little bitch?";
+                        try {
+                            String s = m.getContent();
+                            int pos = s.indexOf(" ");
+                            if(pos != -1){
+                                s = s.substring(pos, s.length());
+                                if (s.length() > 0) {
+                                    reply = bot1session.think(s);
+
+                                }
+                            }
+                            DiscordClient.get().sendMessage(reply,m.getChannel().getID(),true);
+
+//                            m.reply(reply);
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                        else if (m.getContent().startsWith("!patchnotes")) {
+                        try {
+                            String notes = readFile("patchnotes.txt");
+                            //DiscordClient.get().changeAccountInfo(s, "", "");
+                            m.reply(" Current Patchnotes: \n"+notes);
+                        } catch (ParseException | IOException e) {
+                            e.printStackTrace();
+                        }
                     } else if(m.getContent().startsWith(".pm")) {
                         try {
                             PrivateChannel channel = DiscordClient.get().getOrCreatePMChannel(m.getAuthor());
@@ -113,19 +166,42 @@ public class Bot {
                     } else if (m.getContent().startsWith(".presence")) {
                         DiscordClient.get().updatePresence(!DiscordClient.get().getOurUser().getPresence().equals(Presences.IDLE),
                                 DiscordClient.get().getOurUser().getGameID());
+                    } else if (m.getContent().startsWith("!info")) {
+                        try {
+                            DiscordClient.get().sendMessage("Channel: "+m.getChannel().getID(),m.getChannel().getID(),false);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                     } else if(m.getContent().startsWith("!hello")) {
                         try {
                             m.reply("Hello " + m.getAuthor().getName() + ", you enormous salty faggot!");
                         } catch (IOException | ParseException e) {
                             e.printStackTrace();
                         }
+                    }else if(m.getContent().startsWith("!uptime")) {
+                        try {
+                            long millis = System.currentTimeMillis()-startTime;
+                            long second = (millis / 1000) % 60;
+                            long minute = (millis / (1000 * 60)) % 60;
+                            long hour = (millis / (1000 * 60 * 60)) % 24;
+
+                            String time = String.format("%02d hours %02d minutes %02d seconds %d milliseconds", hour, minute, second, millis);
+                            m.reply("I have been online for "+time);
+                        } catch (IOException | ParseException e) {
+                            e.printStackTrace();
+                        }
                     }
                     else if(m.getContent().startsWith("!help")) {
                         try {
-                            m.reply("\n!hello - Greeting" +
-                                    "\n!help - Show this help" +
-                                    "\n!linkme <searchterm> - Return first Google result"+
-                                    "\n!summoner <summonername> - Return first League of Legends stats for a summoner");
+                            m.reply("\n**!hello** - Greeting" +
+                                    "\n**!help** - Show this help" +
+                                    "\n**!linkme <searchterm>** - Return first Google result"+
+                                    "\n**!summoner <summonername>** - Return first League of Legends season stats for a summoner" +
+                                    "\n**!remindme <time in minutes> <What to remind you of>** - Set a timer or reminder for x minutes" +
+                                    "\n**!uptime** - How long the bot has been running for" +
+                                    "\n**!taylor <message>** - Chat with TSwizzle");
                         } catch (IOException | ParseException e) {
                             e.printStackTrace();
                         }
@@ -164,24 +240,14 @@ public class Bot {
                                     //m.getAuthor().get
                                 }
                             }
-
-
-//                                m.reply("Link: "+link);
                         } catch (IOException | ParseException e) {
                             e.printStackTrace();
                         }
                     }
-                     else if(swear_words.contains(m.getContent())){
-                        try{
-                            String reply = "Watch your fucking language "+m.getAuthor();
-                            DiscordClient.get().sendMessage(reply,m.getChannel().getID());
-                        } catch (IOException | ParseException e){
-                            e.printStackTrace();
-                        }
-                    } else if(m.getContent().contains("starwars")|| m.getContent().contains("star wars")) {
+                    else if(m.getContent().contains("starwars")|| m.getContent().contains("star wars")) {
                         try {
                             String reply = "Remember when Matt spoiled that?";
-                            DiscordClient.get().sendMessage(reply, m.getChannel().getID());
+                            DiscordClient.get().sendMessage(reply, m.getChannel().getID(),false);
                         } catch (IOException | ParseException e) {
                             e.printStackTrace();
                         }
@@ -250,18 +316,21 @@ public class Bot {
                             } catch (IOException | ParseException e) {
                                 e.printStackTrace();
                             }
-                    } else if(m.getContent().startsWith("!remindme")) {
-
-                        try {
-                            String reply = "Remember when Matt spoiled that?";
-                            DiscordClient.get().sendMessage(reply, m.getChannel().getID());
-                        } catch (IOException | ParseException e) {
-                            e.printStackTrace();
-                        }
-
-                } else if(m.getContent().contains("nope")) {
+                    }
+//                    else if(m.getContent().startsWith("!remindme")) {
+//
+//                        try {
+//                            String reply = "Remember when Matt spoiled that?";
+//                            DiscordClient.get().sendMessage(reply, m.getChannel().getID());
+//                        } catch (IOException | ParseException e) {
+//                            e.printStackTrace();
+//                        }
+//
+//                }
+                    else if(m.getContent().contains("nope")) {
                     try {
-                        DiscordClient.get().sendMessage("https://youtu.be/gvdf5n-zI14", m.getChannel().getID());
+                        DiscordClient.get().sendMessage("https://youtu.be/gvdf5n-zI14", m.getChannel().getID(),false);
+                        //DiscordClient.get().sendMessage("/tts nope.jpg", m.getChannel().getID());
                     } catch (IOException | ParseException e) {
                         e.printStackTrace();
                     }
@@ -269,24 +338,59 @@ public class Bot {
                     else if(m.getContent().contains("milk")){
                         try{
                             String reply = "Matt can't own milk because he spoils it";
-                            DiscordClient.get().sendMessage(reply,m.getChannel().getID());
+                            DiscordClient.get().sendMessage(reply,m.getChannel().getID(),false);
                         } catch (IOException | ParseException e){
                             e.printStackTrace();
                         }
                     }
-
+                    else if(m.getContent().contains("taylor")||m.getContent().contains("tswift")||m.getContent().contains("taylor swift")||m.getContent().contains("tswizzle")){
+                        try {
+                            m.reply("Are you talking to me? Reply with !taylor <message>");
+                            DiscordClient.get().sendMessage("I heard you talking about me.. \nYou want to !cyber?",m.getAuthor().getID(),false);
+                        } catch (IOException | ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else if(m.getContent().contains("!cyber")){
+                        try {
+                            DiscordClient.get().sendMessage("You're a suck fuck. Get a job beta pleb.",m.getAuthor().getID(),false);
+                        } catch (IOException | ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 else if(m.getContent().startsWith("!remindme")){
                     try{
+                        String reminder_text = "do something";
+                        if(message_array.length > 2) {
+                            StringBuilder strBuilder = new StringBuilder();
+                            for (int i = 2; i < message_array.length; i++) {
+                                strBuilder.append(message_array[i]+" ");
+                            }
+                            reminder_text = strBuilder.toString();
+                        }
+                        final String fReminder = reminder_text;
                         String s = m.getContent();
-
                         int pos = s.indexOf(" ");
                         if(pos == -1){
                             m.reply("I'll remind you never then.");
                         } else {
                             s = s.substring(pos,s.length());
                             if(s.length()>0){
-                                new Reminder(Integer.parseInt(s));
-                                m.reply("Timer set for: "+s);
+                                Runnable task = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            String reminder = String.format("Reminding %s, to %s",m.getAuthor(),fReminder);
+                                            DiscordClient.get().sendMessage(reminder,m.getChannel().getID(),false);
+                                            //m.reply("Timer set for: ");
+                                        } catch (Exception e){
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                };
+                                executor.schedule(task, Integer.parseInt(message_array[1]), TimeUnit.MINUTES);
+                                //new Reminder(Integer.parseInt(s));
+                                m.reply("Reminder set for "+message_array[1]+" minute(s) for "+m.getAuthor()+"to "+reminder_text);
 
                             }
                         }
@@ -304,6 +408,38 @@ public class Bot {
                         DiscordClient.get().getOurUser().getPresence();
                         DiscordClient.get().updatePresence(DiscordClient.get().getOurUser().getPresence().equals(Presences.IDLE),
                                 Optional.ofNullable(id));
+                    } else {
+                        Random rand = new Random();
+                        int  n = rand.nextInt(7);
+                        if(n == rand.nextInt(7) && !m.getAuthor().getName().equals("Tswiftbot")){
+                            String reply = null;
+                            try {
+                                reply = bot1session.think(m.getContent());
+                                DiscordClient.get().sendMessage(reply,m.getChannel().getID(),true);
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                    boolean isFoul = false;
+                    for (String s:message_array) {
+                        if(swear_words.contains(s)) {
+                            isFoul = true;
+
+                        }
+                    }
+                   if(isFoul){
+                        try{
+                            Random rand = new Random();
+                            int  n = rand.nextInt(swear_responses.length);
+                            String reply = String.format(swear_responses[n], m.getAuthor());
+                            DiscordClient.get().sendMessage(reply,m.getChannel().getID(),false);
+                            isFoul = false;
+                        } catch (IOException | ParseException e){
+                            e.printStackTrace();
+                        }
                     }
                 }
             });
@@ -317,9 +453,21 @@ public class Bot {
                     }
                 }
             });
+            DiscordClient.get().getDispatcher().registerListener(new IListener<UserJoinEvent>() {
+                @Override public void receive(UserJoinEvent event) {
+                    try {
+                        DiscordClient.get().sendMessage("Hello! "+event.getUser(),"127565642609065984",false);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            //DiscordClient.get().sendMessage("Taylor Swift is online","128677848067211264",false);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     public static String searchGoogle(String s) throws UnsupportedEncodingException,MalformedURLException,IOException{
@@ -378,6 +526,22 @@ public class Bot {
         RankedStats summonerStats = new Gson().fromJson(reader,RankedStats.class);
 
         return summonerStats;
+    }
+    public static String readFile(String fileName) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(fileName));
+        try {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append("\n");
+                line = br.readLine();
+            }
+            return sb.toString();
+        } finally {
+            br.close();
+        }
     }
 }
 

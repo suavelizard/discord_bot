@@ -104,7 +104,7 @@ public class MessageBuilder {
 			throw new RuntimeException("You need content and a channel ID to send a message!");
 		} else {
 			try {
-				DiscordClient.get().sendMessage(content, channelID);
+				DiscordClient.get().sendMessage(content, channelID,false);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

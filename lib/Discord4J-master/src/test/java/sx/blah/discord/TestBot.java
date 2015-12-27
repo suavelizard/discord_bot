@@ -116,7 +116,7 @@ public class TestBot {
                         invite.accept();
                         DiscordClient.get().sendMessage(String.format("Hello, #%s and the \\\"%s\\\" guild! I was invited by %s!",
                                         response.getChannelName(), response.getGuildName(), event.getMessage().getAuthor()),
-								response.getChannelID());
+								response.getChannelID(),false);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

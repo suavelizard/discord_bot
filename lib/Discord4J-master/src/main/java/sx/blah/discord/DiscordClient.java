@@ -223,14 +223,17 @@ public final class DiscordClient {
      * @throws IOException
      * @throws ParseException
      */
-    public Message sendMessage(String content, String channelID) throws IOException, ParseException {
+    public Message sendMessage(String content, String channelID, boolean tts) throws IOException, ParseException {
         if (null != ws) {
 
             content = StringEscapeUtils.escapeJson(content);
-            
+            String text = "false";
+            if(tts){
+                text = "true";
+            }
             try {
                 String response = Requests.POST.makeRequest(DiscordEndpoints.CHANNELS + channelID + "/messages",
-                        new StringEntity("{\"content\":\"" + content + "\",\"mentions\":[]}","UTF-8"),
+                        new StringEntity("{\"content\":\"" + content + "\",\"mentions\":[],\"tts\":"+text+"}","UTF-8"),
                         new BasicNameValuePair("authorization", token),
                         new BasicNameValuePair("content-type", "application/json"));
 

@@ -100,6 +100,6 @@ public class Message {
      * @param content Message to send.
      */
     public void reply(String content) throws IOException, ParseException {
-        DiscordClient.get().sendMessage(String.format("%s, %s", this.getAuthor(), content), this.getChannel().getID());
+        DiscordClient.get().sendMessage(String.format("%s, %s", this.getAuthor(), content), this.getChannel().getID(),false);
     }
 }
